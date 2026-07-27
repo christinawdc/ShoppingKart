@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# extracted data + model weights -- regenerate, don't commit
+dataset/frames/
+dataset/embeddings/
+models/
+assets/
