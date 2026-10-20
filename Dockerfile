@@ -19,4 +19,5 @@ RUN cd localization && python -c "import dino; dino.get_model('dinov2_vits14', '
 EXPOSE 8501
 CMD ["streamlit", "run", "localization/app.py", \
      "--server.address=0.0.0.0", "--server.port=8501", \
-     "--server.headless=true", "--browser.gatherUsageStats=false"]
+     "--server.headless=true", "--server.baseUrlPath=shoppingkart", \
+     "--browser.gatherUsageStats=false"]
