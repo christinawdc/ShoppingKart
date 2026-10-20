@@ -9,3 +9,6 @@ dataset/embeddings/
 models/
 assets/
 dataset/
+
+# live map built by the app
+store/
