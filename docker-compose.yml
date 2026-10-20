@@ -1,0 +1,10 @@
+services:
+  shoppingkart:
+    build: .
+    image: shoppingkart:local
+    container_name: shoppingkart
+    ports:
+      - "127.0.0.1:8512:8501"
+    volumes:
+      - ./store:/app/store
+    restart: unless-stopped
