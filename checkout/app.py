@@ -26,24 +26,37 @@ def change(pid, delta):
         st.session_state.cart.pop(pid, None)
 
 
-def decode_qr(jpeg_bytes):
-    """Return the text in the first QR code found in the photo, or ''."""
+# what a scanned code can mean: our own QR ("shoppingkart:<id>") or a code printed on the real pack
+BY_CODE = {c: pid for pid, p in PRODUCTS.items() for c in p.get("codes", [])}
+
+
+def decode_codes(jpeg_bytes):
+    """Every QR code and barcode text found in the photo."""
     img = cv2.imdecode(np.frombuffer(jpeg_bytes, np.uint8), cv2.IMREAD_COLOR)
+    found = []
     text, _, _ = cv2.QRCodeDetector().detectAndDecode(img)
-    return text.strip()
+    found.append(text.strip())
+    _, barcodes, _ = cv2.barcode.BarcodeDetector().detectAndDecodeWithType(img)[:3]
+    found += [t.strip() for t in barcodes or ()]
+    return [c for c in found if c]
+
+
+def product_for(code):
+    code = code.removeprefix("shoppingkart:")
+    return code if code in PRODUCTS else BY_CODE.get(code)
 
 
 def scanner():
-    st.caption("Point the camera at a product's QR code and take the photo.")
+    st.caption("Point the camera at a product's QR code or barcode and take the photo.")
     shot = st.camera_input("Scan a product", key=f"scan_{st.session_state.scan_n}")
     if shot is None:
         return
-    code = decode_qr(shot.getvalue()).removeprefix("shoppingkart:")
-    if code in PRODUCTS:
-        change(code, 1)
-        st.session_state.scan_msg = ("success", f"Added {PRODUCTS[code]['emoji']} {PRODUCTS[code]['name']}")
+    pid = next((product_for(c) for c in decode_codes(shot.getvalue()) if product_for(c)), None)
+    if pid:
+        change(pid, 1)
+        st.session_state.scan_msg = ("success", f"Added {PRODUCTS[pid]['emoji']} {PRODUCTS[pid]['name']}")
     else:
-        st.session_state.scan_msg = ("warning", "No product QR found, try again closer or in better light.")
+        st.session_state.scan_msg = ("warning", "No known product code found, try again closer or in better light.")
     st.session_state.scan_n += 1  # fresh camera widget for the next scan
     st.rerun()
 
