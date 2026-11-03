@@ -6,3 +6,4 @@ matplotlib
 pillow
 streamlit
 qrcode
+fpdf2

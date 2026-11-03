@@ -5,11 +5,14 @@
 
 import json
 import random
+from datetime import datetime
 from pathlib import Path
 
 import cv2
 import numpy as np
 import streamlit as st
+
+from bill import make_bill
 
 PRODUCTS = {p["id"]: p for p in json.loads((Path(__file__).parent / "products.json").read_text())}
 
@@ -95,6 +98,7 @@ def cart_panel():
             "order": f"SK-{random.randint(1000, 9999)}",
             "lines": [(PRODUCTS[pid], q) for pid, q in cart.items()],
             "total": total,
+            "when": datetime.now(),
         }
         st.session_state.cart = {}
         st.rerun()
@@ -107,6 +111,9 @@ def receipt_view():
         st.write(f"{p['emoji']} {p['name']} × {q} — {money(p['price'] * q)}")
     st.divider()
     st.metric("Paid", money(r["total"]))
+    st.download_button("Download bill (PDF)", make_bill(r["order"], r["when"], r["lines"], r["total"]),
+                       file_name=f"bill-{r['order']}.pdf", mime="application/pdf",
+                       type="primary", use_container_width=True)
     if st.button("Start a new order"):
         st.session_state.receipt = None
         st.rerun()
