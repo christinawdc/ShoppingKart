@@ -5,7 +5,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
 WORKDIR /app
-RUN pip install --no-cache-dir streamlit
+RUN pip install --no-cache-dir streamlit opencv-python-headless numpy
 COPY checkout ./checkout
 
 EXPOSE 8501
