@@ -1,10 +1,22 @@
 services:
   shoppingkart:
-    build: .
+    build:
+      context: .
+      dockerfile: localization/Dockerfile
     image: shoppingkart:local
     container_name: shoppingkart
     ports:
       - "127.0.0.1:8512:8501"
     volumes:
       - ./store:/app/store
+    restart: unless-stopped
+
+  checkout:
+    build:
+      context: .
+      dockerfile: checkout/Dockerfile
+    image: shoppingkart-checkout:local
+    container_name: shoppingkart-checkout
+    ports:
+      - "127.0.0.1:8513:8501"
     restart: unless-stopped

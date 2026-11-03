@@ -1,0 +1,14 @@
+[
+  {"id": "apple",   "name": "Apples (1 kg)",   "price": 180, "emoji": "🍎", "zone": "Produce"},
+  {"id": "banana",  "name": "Bananas (1 kg)",  "price": 60,  "emoji": "🍌", "zone": "Produce"},
+  {"id": "tomato",  "name": "Tomatoes (1 kg)", "price": 40,  "emoji": "🍅", "zone": "Produce"},
+  {"id": "milk",    "name": "Milk (1 L)",      "price": 68,  "emoji": "🥛", "zone": "Dairy"},
+  {"id": "cheese",  "name": "Cheese slices",   "price": 140, "emoji": "🧀", "zone": "Dairy"},
+  {"id": "eggs",    "name": "Eggs (12)",       "price": 90,  "emoji": "🥚", "zone": "Dairy"},
+  {"id": "bread",   "name": "Bread loaf",      "price": 45,  "emoji": "🍞", "zone": "Entrance"},
+  {"id": "rice",    "name": "Rice (5 kg)",     "price": 420, "emoji": "🍚", "zone": "Entrance"},
+  {"id": "chips",   "name": "Potato chips",    "price": 30,  "emoji": "🥔", "zone": "Checkout"},
+  {"id": "choc",    "name": "Chocolate bar",   "price": 50,  "emoji": "🍫", "zone": "Checkout"},
+  {"id": "juice",   "name": "Orange juice",    "price": 110, "emoji": "🧃", "zone": "Checkout"},
+  {"id": "water",   "name": "Water (1 L)",     "price": 20,  "emoji": "💧", "zone": "Checkout"}
+]
