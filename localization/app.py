@@ -4,6 +4,7 @@
 
 Map tab:    snap ceiling photos as you walk, tag them with a location.
 Locate tab: (next) snap a photo and find where it was taken.
+Plan tab:   pick a shopping list, see the shortest route through the store.
 """
 
 import time
@@ -14,6 +15,7 @@ import streamlit as st
 
 import dino
 import database
+import route
 
 STORE = Path("store")
 IMAGES = STORE / "images"
@@ -69,10 +71,35 @@ def locate_tab():
     st.info("Coming next.")
 
 
-st.set_page_config(page_title="ShoppingKart", page_icon="🛒")
+def plan_tab():
+    store, products = route.load_map()
+    picked = st.multiselect(
+        "Shopping list (in the order you wrote it)", list(store["spots"]),
+        default=["milk", "apple", "chips", "bread", "juice"],
+        format_func=lambda pid: f"{products[pid]['emoji']} {products[pid]['name']}")
+    if not picked:
+        st.info("Add some items to plan a route.")
+        return
+
+    r = route.plan(store, picked)
+    a, b = r["list"]["dist"], r["best"]["dist"]
+    c1, c2, c3 = st.columns(3)
+    c1.metric("In list order", f"{a} m")
+    c2.metric("Optimised", f"{b} m", f"-{a - b} m", delta_color="inverse")
+    c3.metric("Shorter by", f"{100 * (a - b) / a:.0f}%")
+    fig = route.figure(store, products, r)
+    st.pyplot(fig)
+    route.plt.close(fig)
+    st.markdown("**Pick-up order:** Entrance → " + " → ".join(
+        f"{products[pid]['emoji']} {products[pid]['name']}" for pid in r["best"]["items"]) + " → Checkout")
+
+
+st.set_page_config(page_title="ShoppingKart", page_icon="🛒", layout="wide")
 st.title("ShoppingKart")
-tab_map, tab_locate = st.tabs(["Map", "Locate"])
+tab_map, tab_locate, tab_plan = st.tabs(["Map", "Locate", "Plan"])
 with tab_map:
     map_tab()
 with tab_locate:
     locate_tab()
+with tab_plan:
+    plan_tab()

@@ -9,9 +9,10 @@ WORKDIR /app
 
 # CPU-only torch -- the default wheel drags in several GB of CUDA libraries
 RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu \
-    && pip install --no-cache-dir streamlit numpy pillow
+    && pip install --no-cache-dir streamlit numpy pillow matplotlib
 
 COPY localization ./localization
+COPY checkout/products.json ./checkout/products.json
 
 # Bake the DINOv2 code + weights into the image so the first request isn't a download
 RUN cd localization && python -c "import dino; dino.get_model('dinov2_vits14', 'cpu')"
