@@ -1,0 +1,42 @@
+{
+  "_comment": "Hand-drawn floor plan. One cell = 1 m. '#' wall, 'S' shelf, '.' floor. Points are [x, y], y counted down from the top row. Zone labels match the ceiling database labels, so a ceiling match puts you on this map.",
+  "grid": [
+    "#########################",
+    "#......................S#",
+    "#......................S#",
+    "#..SS...SS...SS...SS...S#",
+    "#..SS...SS...SS...SS...S#",
+    "#..SS...SS...SS...SS...S#",
+    "#..SS...SS...SS...SS...S#",
+    "#..SS...SS...SS...SS...S#",
+    "#..SS...SS...SS...SS...S#",
+    "#..SS...SS...SS...SS...S#",
+    "#......................S#",
+    "#......................S#",
+    "#########################"
+  ],
+  "entrance": [1, 11],
+  "checkout": [22, 11],
+  "zones": [
+    {"label": "Zone 1", "name": "Entrance",  "x": [1, 4]},
+    {"label": "Zone 2", "name": "Produce",   "x": [5, 9]},
+    {"label": "Zone 3", "name": "Dairy",     "x": [10, 14]},
+    {"label": "Zone 4", "name": "Household", "x": [15, 19]},
+    {"label": "Zone 5", "name": "Checkout",  "x": [20, 23]}
+  ],
+  "spots": {
+    "bread":  [2, 4],
+    "rice":   [2, 8],
+    "apple":  [5, 3],
+    "banana": [7, 6],
+    "tomato": [5, 9],
+    "milk":   [10, 4],
+    "cheese": [12, 7],
+    "eggs":   [10, 9],
+    "juice":  [22, 3],
+    "water":  [22, 5],
+    "chips":  [20, 5],
+    "choc":   [22, 8],
+    "jelly":  [20, 9]
+  }
+}
