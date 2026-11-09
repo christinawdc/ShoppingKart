@@ -1,9 +1,18 @@
-"""Build a self-contained presentation page: replay one walk against a map built from another.
+"""Build a self-contained presentation page: a shopping trip replayed with real ceiling frames.
 
-Matching is done here, once, with the real DINOv2 pipeline; the page just plays it back.
+The shopping list is planned into the shortest route (route.py). Then a recorded walk is
+replayed frame by frame: each frame is matched against the ceiling map with DINOv2, the
+match says which zone the cart is in, and the cart advances along the planned route
+through that zone, ticking items off as it passes them. Matching is done here, once,
+with the real pipeline; the page just plays it back, offline, with no server.
 
-    python localization/make_demo.py dataset/IMG_0364_2/frames dataset/IMG_0365_2/frames
-    python localization/make_demo.py dataset/IMG_0364_2/frames --self-test   # odd frames vs even frames
+    python localization/make_demo.py dataset/IMG_0364_2/frames --self-test
+    python localization/make_demo.py dataset/IMG_0364_2/frames --self-test --items milk apple chips bread juice
+    python localization/make_demo.py dataset/IMG_0364_2/frames dataset/IMG_0365_2/frames   # walk vs map
+
+--self-test replays the odd frames against a map of the even frames, so every replayed
+frame is absent from the map. Map frames are split evenly into the store's zones in walk
+order, the same split as the labels in dataset/database.csv.
 """
 
 import argparse
@@ -15,57 +24,107 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-import dino
 import database
+import route
 
-ZONES = ["Entrance", "Produce", "Dairy", "Checkout"]
-# cart route on the minimap (viewBox 600x340), one polyline through the store
-ROUTE = [(40, 300), (40, 60), (200, 60), (200, 300), (360, 300), (360, 60), (520, 60), (520, 300)]
+CROP_BOTTOM = 0.12
 
 
-def thumb(path, w=360, crop_bottom=0.12):
+def thumb(path, w=360):
     img = Image.open(path).convert("RGB")
     W, H = img.size
-    img = img.crop((0, 0, W, int(H * (1 - crop_bottom))))
+    img = img.crop((0, 0, W, int(H * (1 - CROP_BOTTOM))))
     img = img.resize((w, round(w * img.size[1] / img.size[0])))
     buf = io.BytesIO()
     img.save(buf, "JPEG", quality=70)
     return "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
+def embeddings(frames_dir, paths):
+    """Use the embeddings similarity_matrix.py saved next to the frames (same settings), else embed."""
+    cached = frames_dir.parent / "embeddings" / "embeddings.npy"
+    if cached.exists():
+        emb = np.load(cached)
+        if len(emb) == len(paths):
+            print(f"using cached {cached}")
+            return emb
+    import dino  # loads torch, only when there is no cache
+    return dino.embed(paths, crop_bottom=CROP_BOTTOM)
+
+
+def smooth(zones):
+    """Median of 3, then never step back: the planned route only moves forward through the zones."""
+    med = [sorted(zones[max(0, k - 1):k + 2])[len(zones[max(0, k - 1):k + 2]) // 2] for k in range(len(zones))]
+    return [int(z) for z in np.maximum.accumulate(med)]
+
+
+def cart_positions(zones, route_zone):
+    """Where the cart is along the route (cell index) for each frame.
+
+    The frames the cart spends in a zone are spread evenly over the route's stretch in that zone.
+    """
+    span = {z: (route_zone.index(z), len(route_zone) - 1 - route_zone[::-1].index(z)) for z in set(route_zone)}
+    count = {z: zones.count(z) for z in set(zones)}
+    seen, pos, out = {}, 0.0, []
+    for z in zones:
+        seen[z] = seen.get(z, 0) + 1
+        s, e = span[z]
+        pos = max(pos, s + seen[z] / count[z] * (e - s))
+        out.append(round(pos, 2))
+    return out
+
+
 def main():
-    p = argparse.ArgumentParser(description=__doc__)
+    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("map_frames", type=Path)
     p.add_argument("walk_frames", type=Path, nargs="?")
     p.add_argument("--self-test", action="store_true")
+    p.add_argument("--items", nargs="+", default=["milk", "apple", "chips", "bread", "juice"])
     p.add_argument("--out", type=Path, default=Path("demo.html"))
     args = p.parse_args()
 
-    map_paths = sorted(args.map_frames.glob("frame_*.jpg"))
+    store, products = route.load_map()
+    n_zones = len(store["zones"])
+
+    all_paths = sorted(args.map_frames.glob("frame_*.jpg"))
+    all_emb = embeddings(args.map_frames, all_paths)
+    all_zone = [i * n_zones // len(all_paths) for i in range(len(all_paths))]
     if args.self_test:
-        walk_paths, map_paths = map_paths[1::2], map_paths[0::2]
+        map_idx, walk_idx = list(range(0, len(all_paths), 2)), list(range(1, len(all_paths), 2))
+        map_paths, map_emb = [all_paths[i] for i in map_idx], all_emb[map_idx]
+        map_zone = [all_zone[i] for i in map_idx]
+        walk_paths, walk_emb = [all_paths[i] for i in walk_idx], all_emb[walk_idx]
     else:
+        map_paths, map_emb, map_zone = all_paths, all_emb, all_zone
         walk_paths = sorted(args.walk_frames.glob("frame_*.jpg"))
+        walk_emb = embeddings(args.walk_frames, walk_paths)
 
-    map_emb = dino.embed(map_paths, crop_bottom=0.12)
-    walk_emb = dino.embed(walk_paths, crop_bottom=0.12)
     sims, idx = database.search(map_emb, walk_emb, k=1)
-
     matches = idx[:, 0]
-    corr = np.corrcoef(np.arange(len(matches)), matches)[0, 1]
-    print(f"map {len(map_paths)} frames, walk {len(walk_paths)} frames")
-    print(f"match order correlation {corr:+.2f}  (near +1 = walk follows the map)")
-    print("matches:", matches.tolist())
-    print(f"mean similarity {sims.mean():.3f}")
+    raw = [map_zone[m] for m in matches]
+    zones = smooth(raw)
+    print(f"map {len(map_paths)} frames, walk {len(walk_paths)} frames, mean similarity {sims.mean():.3f}")
+    print("matched zone :", " ".join(str(z + 1) for z in raw))
+    print("smoothed zone:", " ".join(str(z + 1) for z in zones))
 
-    n = len(map_paths)
+    r = route.plan(store, list(dict.fromkeys(args.items)))
+    best = r["best"]
+    names = [z["name"] for z in store["zones"]]
+    route_zone = [names.index(route.zone_at(store, x)["name"]) for x, _ in best["cells"]]
+    pos = cart_positions(zones, route_zone)
+    print(f"route {best['dist']} m (list order {r['list']['dist']} m): " + " -> ".join(best["items"]))
+
     data = {
-        "zones": ZONES,
-        "route": ROUTE,
-        "map": [{"img": thumb(q), "zone": ZONES[i * len(ZONES) // n]}
-                for i, q in enumerate(map_paths)],
-        "walk": [{"img": thumb(q), "match": int(m), "sim": float(s)}
-                 for q, m, s in zip(walk_paths, matches, sims[:, 0])],
+        "store": {k: store[k] for k in ("grid", "entrance", "checkout", "zones")},
+        "items": [{"id": pid, "name": products[pid]["name"], "emoji": products[pid]["emoji"],
+                   "spot": store["spots"][pid], "at": at}
+                  for pid, at in zip(best["items"], best["item_at"])],
+        "route": best["cells"],
+        "listRoute": r["list"]["cells"],
+        "dist": {"list": r["list"]["dist"], "best": best["dist"]},
+        "map": [{"img": thumb(q), "zone": z} for q, z in zip(map_paths, map_zone)],
+        "walk": [{"img": thumb(q), "match": int(m), "sim": float(s), "raw": rz, "zone": int(z), "pos": ps}
+                 for q, m, s, rz, z, ps in zip(walk_paths, matches, sims[:, 0], raw, zones, pos)],
     }
     html = (Path(__file__).parent / "demo_template.html").read_text()
     args.out.write_text(html.replace("__DATA__", json.dumps(data)))
