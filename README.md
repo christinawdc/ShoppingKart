@@ -118,11 +118,6 @@ streamlit run app.py
 docker compose up --build
 ```
 
-| Application | URL |
-|---|---|
-| Localization | [http://localhost:8512](http://localhost:8512) |
-| Checkout | [http://localhost:8513](http://localhost:8513) |
-
 ## 🔮 Future Improvements
 
 - Real-time indoor cart localization.
