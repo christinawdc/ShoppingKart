@@ -74,6 +74,38 @@ def cart_positions(zones, route_zone):
     return out
 
 
+def simulate(map_frames, walk_frames=None, self_test=False, items=("milk", "apple", "chips", "bread", "juice")):
+    """Match the walk's frames against the ceiling map, plan the route, and place the cart on it for each frame."""
+    store, products = route.load_map()
+    n_zones = len(store["zones"])
+
+    all_paths = sorted(map_frames.glob("frame_*.jpg"))
+    all_emb = embeddings(map_frames, all_paths)
+    all_zone = [i * n_zones // len(all_paths) for i in range(len(all_paths))]
+    if self_test:
+        map_idx, walk_idx = list(range(0, len(all_paths), 2)), list(range(1, len(all_paths), 2))
+        map_paths, map_emb = [all_paths[i] for i in map_idx], all_emb[map_idx]
+        map_zone = [all_zone[i] for i in map_idx]
+        walk_paths, walk_emb = [all_paths[i] for i in walk_idx], all_emb[walk_idx]
+    else:
+        map_paths, map_emb, map_zone = all_paths, all_emb, all_zone
+        walk_paths = sorted(walk_frames.glob("frame_*.jpg"))
+        walk_emb = embeddings(walk_frames, walk_paths)
+
+    sims, idx = database.search(map_emb, walk_emb, k=1)
+    matches = idx[:, 0]
+    raw = [map_zone[m] for m in matches]
+    zones = smooth(raw)
+
+    r = route.plan(store, list(dict.fromkeys(items)))
+    names = [z["name"] for z in store["zones"]]
+    route_zone = [names.index(route.zone_at(store, x)["name"]) for x, _ in r["best"]["cells"]]
+    return {"store": store, "products": products, "route": r,
+            "map_paths": map_paths, "map_zone": map_zone, "walk_paths": walk_paths,
+            "matches": matches, "sims": sims, "raw": raw, "zones": zones,
+            "pos": cart_positions(zones, route_zone)}
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("map_frames", type=Path)
@@ -83,35 +115,14 @@ def main():
     p.add_argument("--out", type=Path, default=Path("demo.html"))
     args = p.parse_args()
 
-    store, products = route.load_map()
-    n_zones = len(store["zones"])
-
-    all_paths = sorted(args.map_frames.glob("frame_*.jpg"))
-    all_emb = embeddings(args.map_frames, all_paths)
-    all_zone = [i * n_zones // len(all_paths) for i in range(len(all_paths))]
-    if args.self_test:
-        map_idx, walk_idx = list(range(0, len(all_paths), 2)), list(range(1, len(all_paths), 2))
-        map_paths, map_emb = [all_paths[i] for i in map_idx], all_emb[map_idx]
-        map_zone = [all_zone[i] for i in map_idx]
-        walk_paths, walk_emb = [all_paths[i] for i in walk_idx], all_emb[walk_idx]
-    else:
-        map_paths, map_emb, map_zone = all_paths, all_emb, all_zone
-        walk_paths = sorted(args.walk_frames.glob("frame_*.jpg"))
-        walk_emb = embeddings(args.walk_frames, walk_paths)
-
-    sims, idx = database.search(map_emb, walk_emb, k=1)
-    matches = idx[:, 0]
-    raw = [map_zone[m] for m in matches]
-    zones = smooth(raw)
+    sim = simulate(args.map_frames, args.walk_frames, args.self_test, args.items)
+    store, products, r = sim["store"], sim["products"], sim["route"]
+    map_paths, map_zone, walk_paths = sim["map_paths"], sim["map_zone"], sim["walk_paths"]
+    matches, sims, raw, zones, pos = sim["matches"], sim["sims"], sim["raw"], sim["zones"], sim["pos"]
+    best = r["best"]
     print(f"map {len(map_paths)} frames, walk {len(walk_paths)} frames, mean similarity {sims.mean():.3f}")
     print("matched zone :", " ".join(str(z + 1) for z in raw))
     print("smoothed zone:", " ".join(str(z + 1) for z in zones))
-
-    r = route.plan(store, list(dict.fromkeys(args.items)))
-    best = r["best"]
-    names = [z["name"] for z in store["zones"]]
-    route_zone = [names.index(route.zone_at(store, x)["name"]) for x, _ in best["cells"]]
-    pos = cart_positions(zones, route_zone)
     print(f"route {best['dist']} m (list order {r['list']['dist']} m): " + " -> ".join(best["items"]))
 
     data = {

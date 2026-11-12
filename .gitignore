@@ -12,3 +12,6 @@ dataset/
 
 # live map built by the app
 store/
+
+# real orders logged by the checkout app
+checkout/orders.jsonl

@@ -1,42 +1,74 @@
 {
-  "_comment": "Hand-drawn floor plan. One cell = 1 m. '#' wall, 'S' shelf, '.' floor. Points are [x, y], y counted down from the top row. Zone labels match the ceiling database labels, so a ceiling match puts you on this map.",
+  "_comment": "Made-up supermarket floor plan. One cell = 1 m. '#' wall, 'S' shelf, fridge or counter, '.' floor. Points are [x, y], y counted down from the top row. Zones run left to right in the order the recorded ceiling walk passes them, and their labels match the ceiling database labels, so a ceiling match puts you on this map.",
   "grid": [
-    "#########################",
-    "#......................S#",
-    "#......................S#",
-    "#..SS...SS...SS...SS...S#",
-    "#..SS...SS...SS...SS...S#",
-    "#..SS...SS...SS...SS...S#",
-    "#..SS...SS...SS...SS...S#",
-    "#..SS...SS...SS...SS...S#",
-    "#..SS...SS...SS...SS...S#",
-    "#..SS...SS...SS...SS...S#",
-    "#......................S#",
-    "#......................S#",
-    "#########################"
+    "#####################################",
+    "#..............SSSSSSS.............S#",
+    "#..................................S#",
+    "#.............................SS...S#",
+    "#..SS...SS..SS...SS....SS.SS..SS...S#",
+    "#..SS...SS..SS...SS....SS.SS..SS...S#",
+    "#..SS............SS....SS.SS..SS...S#",
+    "#..SS............SS....SS.SS..SS...S#",
+    "#..SS...SS..SS...SS....SS.SS..SS...S#",
+    "#..SS...SS..SS...SS....SS.SS........#",
+    "#..SS............SS....SS.SS........#",
+    "#..SS............SS....SS.SS..S.S.S.#",
+    "#.............................S.S.S.#",
+    "#.............................S.S.S.#",
+    "#...................................#",
+    "#...................................#",
+    "#####################################"
   ],
-  "entrance": [1, 11],
-  "checkout": [22, 11],
+  "entrance": [1, 15],
+  "checkout": [35, 15],
   "zones": [
-    {"label": "Zone 1", "name": "Entrance",  "x": [1, 4]},
-    {"label": "Zone 2", "name": "Produce",   "x": [5, 9]},
-    {"label": "Zone 3", "name": "Dairy",     "x": [10, 14]},
-    {"label": "Zone 4", "name": "Household", "x": [15, 19]},
-    {"label": "Zone 5", "name": "Checkout",  "x": [20, 23]}
+    {
+      "label": "Zone 1",
+      "name": "Entrance",
+      "x": [1, 6]
+    },
+    {
+      "label": "Zone 2",
+      "name": "Produce",
+      "x": [7, 14]
+    },
+    {
+      "label": "Zone 3",
+      "name": "Dairy",
+      "x": [15, 21]
+    },
+    {
+      "label": "Zone 4",
+      "name": "Household",
+      "x": [22, 28]
+    },
+    {
+      "label": "Zone 5",
+      "name": "Checkout",
+      "x": [29, 35]
+    }
   ],
   "spots": {
-    "bread":  [2, 4],
-    "rice":   [2, 8],
-    "apple":  [5, 3],
-    "banana": [7, 6],
-    "tomato": [5, 9],
-    "milk":   [10, 4],
-    "cheese": [12, 7],
-    "eggs":   [10, 9],
-    "juice":  [22, 3],
-    "water":  [22, 5],
-    "chips":  [20, 5],
-    "choc":   [22, 8],
-    "jelly":  [20, 9]
+    "bread": [2, 5],
+    "rice": [5, 9],
+    "apple": [7, 4],
+    "banana": [10, 9],
+    "tomato": [11, 5],
+    "milk": [16, 2],
+    "cheese": [16, 7],
+    "eggs": [19, 10],
+    "soap": [22, 5],
+    "tissues": [25, 4],
+    "detergent": [25, 8],
+    "toothpaste": [28, 10],
+    "chips": [29, 5],
+    "choc": [32, 7],
+    "juice": [34, 3],
+    "water": [34, 6],
+    "jelly": [33, 12],
+    "pocket-diary": [23, 12],
+    "trash-bag": [22, 9],
+    "chocolates": [30, 14],
+    "cake": [8, 7]
   }
 }

@@ -89,6 +89,77 @@
     "price": 40,
     "emoji": "🍮",
     "zone": "Checkout",
-    "codes": ["8901493092515", "http://www.fruitomans.com/"]
+    "codes": [
+      "8901493092515",
+      "http://www.fruitomans.com/"
+    ]
+  },
+  {
+    "id": "soap",
+    "name": "Bath soap",
+    "price": 45,
+    "emoji": "🧼",
+    "zone": "Household"
+  },
+  {
+    "id": "tissues",
+    "name": "Tissue box",
+    "price": 80,
+    "emoji": "🧻",
+    "zone": "Household"
+  },
+  {
+    "id": "detergent",
+    "name": "Detergent (1 kg)",
+    "price": 210,
+    "emoji": "🧺",
+    "zone": "Household"
+  },
+  {
+    "id": "toothpaste",
+    "name": "Toothpaste",
+    "price": 95,
+    "emoji": "🪥",
+    "zone": "Household"
+  },
+  {
+    "id": "pocket-diary",
+    "name": "Pocket Diary",
+    "price": 525,
+    "emoji": "📦",
+    "zone": "Household",
+    "codes": [
+      "23/AD/007"
+    ]
+  },
+  {
+    "id": "trash-bag",
+    "name": "Trash bag",
+    "price": 20,
+    "emoji": "📦",
+    "zone": "Household",
+    "codes": [
+      "23/CS/077"
+    ]
+  },
+  {
+    "id": "chocolates",
+    "name": "Chocolates",
+    "price": 50,
+    "emoji": "📦",
+    "zone": "Checkout",
+    "codes": [
+      "23/CS/088"
+    ]
+  },
+  {
+    "id": "cake",
+    "name": "Cake",
+    "price": 700,
+    "emoji": "📦",
+    "zone": "Produce",
+    "codes": [
+      "23/EE/007"
+    ]
   }
 ]

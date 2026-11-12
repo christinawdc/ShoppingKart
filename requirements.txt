@@ -7,3 +7,4 @@ pillow
 streamlit
 qrcode
 fpdf2
+pyserial

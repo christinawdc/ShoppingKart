@@ -73,9 +73,10 @@ def locate_tab():
 
 def plan_tab():
     store, products = route.load_map()
+    # shortcut: route planning is exact (2^n * n^2), so lists stop at 12 items; use a heuristic for longer ones
     picked = st.multiselect(
         "Shopping list (in the order you wrote it)", list(store["spots"]),
-        default=["milk", "apple", "chips", "bread", "juice"],
+        default=["milk", "apple", "chips", "bread", "juice"], max_selections=12,
         format_func=lambda pid: f"{products[pid]['emoji']} {products[pid]['name']}")
     if not picked:
         st.info("Add some items to plan a route.")
